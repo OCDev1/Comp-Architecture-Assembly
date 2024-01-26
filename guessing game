@@ -1,0 +1,66 @@
+.extern printf
+.extern scanf
+
+.section .data # here are all the vars and data.
+user_seed:
+    .space 8, 0x0
+
+rand_num:
+    .space 8, 0x0
+
+user_guess:
+    .space 8, 0x0
+
+.section .rodata # here we put the strings and data we dont want to change
+enter_config_fmt:
+    .string "Enter configuration seed: "
+
+scanf_fmt:
+    .string "%d"
+
+rand_fmt:
+    .string "Rand num is: %d\n"
+
+.section .text # here is the executable code
+.globl do_mains
+.type	do_mains, @function
+do_mains:
+    # function setup
+    pushq %rbp
+    movq %rsp, %rbp
+
+    # Print prompt to user
+    movq $enter_config_fmt, %rdi
+    xorl %eax, %eax
+    call printf
+
+    # Read the seed
+    mov $scanf_fmt, %rdi
+    mov $user_seed, %rsi
+    xorl %eax, %eax
+    call scanf
+
+    # Generate random number
+    movq (user_seed), %rdi
+    call srand # seeding the generator
+    call rand # generate the number, result is in rax
+
+    #limit the range of the numbers
+    xor %rcx, %rcx
+    mov $0x10, %rcx
+    xor %rdx, %rdx
+    div %rcx
+    shr %rdx
+    addq $0x1, %rdx
+    mov %rdx, (rand_num)
+
+    #checking that rand num was generated
+    mov $rand_fmt, %rdi
+    xor %rsi, %rsi
+    mov (rand_num), %rsi
+    call printf
+
+
+    movq %rbp, %rsp
+    popq %rbp
+    ret
