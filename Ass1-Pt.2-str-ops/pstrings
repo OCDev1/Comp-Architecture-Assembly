@@ -7,6 +7,12 @@
 pstrlen_print_fmt:
     .string "first pstring length: %d, second pstring length: %d\n"
 
+swapCase_print_fmt:
+    .string "length: %d, string: %s\n"
+
+swapCase_print_fmt2:
+    .string "length: %d, string: %s"
+
 test_print_fmt:
     .string "made it to pstring"
 
@@ -83,7 +89,139 @@ pstrlen:
     popq %rbp
     ret
 
+#-------------------------------------------------
 
+.globl swapCase
+.type	swapCase, @function
+swapCase:
+     # Enter
+        pushq %rbp
+        movq %rsp, %rbp
+
+ # Change every instance of small caps to big and vice-versa
+ # save original adresses
+ mov %r13, %r12
+ mov %r14, %r15
+
+ # make counter out of r10
+ xor %r10, %r10
+ # first string
+.loop21:
+    # Read byte from string
+    movb (%r13), %al
+    add $0x1, %r10
+
+    # If at the end of the string, exit
+    cmpb $0x0, %al
+    je .secondString
+
+    # If the byte is small, change it to caps
+    cmpb $0x61, %al
+    jge .lowerSecCheck      # possibly lower case letter
+
+    # If the byte is caps, change it to small
+    cmpb $0x41, %al
+    jge .upperSecCheck      # possibly upper case letter
+
+.next21:
+    # Increment the pointer and counter , and continue to next iteration
+    incq %r13
+    jmp .loop21
+
+.lowerSecCheck:
+    cmpb $0x7A, %al
+    jle .lowerToUpper       # confirmed lower case letter
+    jmp .next21                   # not a letter at all
+
+.upperSecCheck:
+    cmpb $0x5A, %al
+    jle .upperToLower       # confirmed upper case letter
+    jmp .next21                   # not a letter at all
+
+.lowerToUpper:
+    subb $0x20, %al
+    movb %al, (%r13)
+    jmp .next21
+
+.upperToLower:
+    addb $0x20, %al
+    movb %al, (%r13)
+    jmp .next21
+
+# same thing for second string
+.secondString:
+xor %r13, %r13
+.loop22:
+    # Read byte from string
+    xorb %al, %al
+    movb (%r14), %al
+
+    # If at the end of the string, exit
+    cmpb $0x0, %al
+    je .done2
+
+    # If the byte is small, change it to caps
+    cmpb $0x61, %al
+    jge .lowerSecCheck2      # possibly lower case letter
+
+    # If the byte is caps, change it to small
+    cmpb $0x41, %al
+    jge .upperSecCheck2      # possibly upper case letter
+
+.next22:
+    # Increment the pointer and counter, and continue to next iteration
+    incq %r14
+    add $0x1, %r13
+    jmp .loop22
+
+.lowerSecCheck2:
+    cmpb $0x7A, %al
+    jle .lowerToUpper2       # confirmed lower case letter
+    jmp .next22                   # not a letter at all
+
+.upperSecCheck2:
+    cmpb $0x5A, %al
+    jle .upperToLower2       # confirmed upper case letter
+    jmp .next22                   # not a letter at all
+
+.lowerToUpper2:
+    subb $0x20, %al
+    movb %al, (%r14)
+    jmp .next22
+
+.upperToLower2:
+    addb $0x20, %al
+    movb %al, (%r14)
+    jmp .next22
+
+.done2:
+    # Print the result
+    sub $0x2, %r10
+    xor %rsi, %rsi
+    movq $swapCase_print_fmt, %rdi      # text
+    mov %r10, %rsi                      # number
+    xor %rdx, %rdx
+    incq %r12
+    movq %r12, %rdx                     # string
+    xorq %rax, %rax
+    call printf
+
+    sub $0x1, %r13
+    xor %r14, %r14
+    xor %rsi, %rsi
+    movq $swapCase_print_fmt2, %rdi      # text
+    mov %r13, %rsi                      # number
+    xor %rdx, %rdx
+    incq %r15
+    movq %r15, %rdx                     # string
+    xorq %rax, %rax
+    call printf
+
+# Exit
+    xorq %rax, %rax
+    movq %rbp, %rsp
+    popq %rbp
+    ret
 
 
 
