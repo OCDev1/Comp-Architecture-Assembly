@@ -1,0 +1,133 @@
+
+.extern printf
+.extern scanf
+
+.section .data # here are all the vars and data.
+user_seed:
+    .space 8, 0x0
+
+rand_num:
+    .space 8, 0x0
+
+user_guess:
+    .space 8, 0x0
+
+counter:
+    .space 8, 0x0
+
+loss_val:
+    .space 8, 0x5
+
+.section .rodata # here we put the strings and data we dont want to change
+enter_config_fmt:
+    .string "Enter configuration seed: "
+
+scanf_fmt:
+    .string "%d"
+
+ask_user_fmt:
+    .string "What is your guess? "
+
+rand_check_fmt:
+    .string "Rand num is: %d\n"
+
+success_msg_fmt:
+    .string "Congratz! You won!"
+
+fail_msg_fmt:
+    .string "Incorrect. \n"
+
+game_over_fmt:
+    .string "Game over, you lost :(. The Correct answer was %d "
+
+.section .text # here is the executable code
+.globl main
+.type	main, @function
+main:
+    # function setup
+    pushq %rbp
+    movq %rsp, %rbp
+
+    # Print prompt to user
+    movq $enter_config_fmt, %rdi
+    xorl %eax, %eax
+    call printf
+
+    # Read the seed
+    mov $scanf_fmt, %rdi
+    xor %rsi, %rsi
+    mov $user_seed, %rsi
+    xor %rax, %rax
+    call scanf
+
+    # Generate random number
+    xor %rdi, %rdi
+    movq (user_seed), %rdi
+    call srand                  # seeding the generator
+    xor %rax, %rax
+    call rand                   # generate the number, result is in rax
+
+    #limit the range of the numbers
+    xor %rcx, %rcx
+    mov $0xA, %rcx              # mod 10 for correct range
+    xor %rdx, %rdx
+    div %rcx
+    mov %rdx, (rand_num)
+
+    # --------------starting the guess loop ---------------------
+.loop:
+
+    # ask user for his guess
+    xor %rdi, %rdi
+    movq $ask_user_fmt, %rdi
+    call printf
+
+
+    # read the guess and put in user_guess
+    mov $scanf_fmt, %rdi
+    mov $user_guess, %rsi
+    call scanf
+
+    # check if the guess is right
+    mov (rand_num), %rax    # put rand_num in rax
+    mov (user_guess), %rbx  # put user_guess in rbx
+    cmp %rax, %rbx          # compare them
+
+    # if equal jump to success
+    je .success
+
+    # otherwise try again
+    xor %rdi, %rdi
+    movq $fail_msg_fmt, %rdi # print incorrect msg
+    call printf
+
+    mov (counter), %rcx
+    inc %rcx                 # increment counter
+    mov %rcx, counter
+    xor %rdx, %rdx
+    mov $0x5, %rdx
+    cmp (counter), %rdx      # check if this was 5th try
+    je .game_over            # if it was then game over
+    mov %rcx, counter        # if not then update counter and continue
+    jne .loop
+
+
+
+.success:
+    # Print the success message and finish
+    movq $success_msg_fmt, %rdi
+    xorq %rax, %rax
+    call printf
+    jmp .done
+
+.game_over:
+    # Print the game over message and finish
+        movq $game_over_fmt, %rdi
+        movq (rand_num), %rsi
+        call printf
+        jmp .done
+
+.done:
+    movq %rbp, %rsp
+    popq %rbp
+    ret
