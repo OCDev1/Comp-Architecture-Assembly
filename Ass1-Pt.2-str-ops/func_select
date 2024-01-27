@@ -1,0 +1,52 @@
+.extern printf
+.extern scanf
+.extern pstrlen
+.extern swapCase
+
+.section .data
+
+.section .rodata
+debug_fmt:
+    .string "you are here"
+
+.section .text
+.globl run_func
+.type	run_func, @function
+run_func:
+    # Enter
+    pushq %rbp
+    movq %rsp, %rbp
+
+    xor %r12, %r12
+    xor %r13, %r13
+    xor %r14, %r14
+
+    # saving arguments in registers
+    mov %rdi, %r12      # saving choice in r12
+    mov %rsi, %r13      # saving 1st string address in r13
+    mov %rdx, %r14      # saving 2nd string address in r14
+
+    # if choice is 31 call pstrlen
+    cmp $0x1F, %rdi
+    je .pstrlenCall
+
+    # if choice is 33 call swapCase
+    cmp $0x21, %rdi
+    je .swapCaseCall
+
+    # if choice is 34 call psrijcpy
+    cmp $0x22, %rdi
+    je .pstrlenCall
+
+.pstrlenCall:
+        call pstrlen
+
+.swapCaseCall:
+        call swapCase
+
+
+ # Exit
+    xorq %rax, %rax
+    movq %rbp, %rsp
+    popq %rbp
+    ret
