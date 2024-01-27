@@ -1,0 +1,89 @@
+.extern printf
+.extern scanf
+
+.section .data
+
+.section .rodata
+pstrlen_print_fmt:
+    .string "first pstring length: %d, second pstring length: %d\n"
+
+test_print_fmt:
+    .string "made it to pstring"
+
+.section .text
+.globl pstrlen
+.type	pstrlen, @function
+pstrlen:
+     # Enter
+        pushq %rbp
+        movq %rsp, %rbp
+
+        # make a counter out of r10
+        xor %r10, %r10
+
+        # loop to count the first string, length kept in r10
+        .loop1:
+            # Read byte from string
+            movb (%r13), %al
+
+            # If were at the end of the string, exit
+            cmpb $0x0, %al
+            je .secString
+
+            # else continue counting
+            jne .next1
+
+        .next1:
+            # Increment the pointer and counter, and continue to next iteration
+            inc %r10
+            incq %r13
+            jmp .loop1
+
+        .secString:
+        xorb %al, %al
+        # make a counter out of r11
+          xor %r11, %r11
+        # loop to count the second string, length kept in r11
+                .loop2:
+                    # Read byte from string
+                    movb (%r14), %al
+
+                    # If were at the end of the string, exit
+                    cmpb $0x0, %al
+                    je .done
+
+                    # else continue counting
+                    jne .next2
+
+                .next2:
+                    # Increment the pointer and counter, and continue to next iteration
+                    inc %r11
+                    incq %r14
+                    jmp .loop2
+
+        .done:
+            # Print the results
+            xor %rdi, %rdi
+            xor %rsi, %rsi
+            xor %rdx, %rdx
+            movq $pstrlen_print_fmt, %rdi
+            dec %r10
+            dec %r11
+            movq %r10, %rsi
+            movq %r11, %rdx
+            xorq %rax, %rax
+            call printf
+
+# Exit
+    xorq %rax, %rax
+     xor %rdi, %rdi
+     xor %rsi, %rsi
+     xor %rdx, %rdx
+    movq %rbp, %rsp
+    popq %rbp
+    ret
+
+
+
+
+
