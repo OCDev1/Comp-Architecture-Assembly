@@ -1,3 +1,4 @@
+# 318673407 Omri Cohen
 .extern printf
 .extern scanf
 .extern pstrlen
@@ -67,7 +68,10 @@ run_func:
     ret
 
 .swapCaseCall:
-        # first return pointer will be saved in r10
+        # first return pointer will be saved in r10, length will be saved in r15
+                mov %r13, %rdi
+                call pstrlen
+                mov %rax, %r15
                 mov %r13, %rdi
                 call swapCase        # first call
                 mov %rax, %r10       # save return val in r10
@@ -78,13 +82,16 @@ run_func:
                 # Print the result
                 xor %rsi, %rsi
                 movq $swapCase_print_fmt, %rdi      # text
-                mov $0x0, %rsi                      # number
+                mov %r15, %rsi                      # number
                 xor %rdx, %rdx
                 movq %r10, %rdx                     # string
                 xorq %rax, %rax
                 call printf
 
-        # second return pointer will be saved in r10
+        # second return pointer will be saved in r10, length will be saved in r15
+                mov %r14, %rdi
+                call pstrlen
+                mov %rax, %r15
                 mov %r14, %rdi
                 call swapCase        # second call
                 mov %rax, %r10       # save return val in r10
@@ -95,12 +102,11 @@ run_func:
         # Print the result
                 xor %rsi, %rsi
                 movq $swapCase_print_fmt, %rdi      # text
-                mov $0x0, %rsi                      # number
+                mov %r15, %rsi                      # number
                 xor %rdx, %rdx
                 movq %r10, %rdx                     # string
                 xorq %rax, %rax
                 call printf
-
 
  # Exit
     xorq %rax, %rax
