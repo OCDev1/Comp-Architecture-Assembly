@@ -1,23 +1,25 @@
-# 318673407 Omri Cohen
 .extern printf
 .extern scanf
 
 .section .data
 
 .section .rodata
-pstrlen_print_fmt:
-    .string "first pstring length: %d, second pstring length: %d\n"
+# pstrlen_print_fmt:
+  #  .string "first pstring length: %d, second pstring length: %d\n"
 
-swapCase_print_fmt:
-    .string "length: %d, string: %s\n"
+# swapCase_print_fmt:
+  #  .string "length: %d, string: %s\n"
 
-swapCase_print_fmt2:
-    .string "length: %d, string: %s"
+# swapCase_print_fmt2:
+ #   .string "length: %d, string: %s"
 
-test_print_fmt:
-    .string "made it to pstring"
+scanf_fmt_3:
+    .string "%d %d"
 
 .section .text
+
+# ---------------PSTRLEN-----------------------
+
 .globl pstrlen
 .type	pstrlen, @function
 pstrlen:
@@ -58,7 +60,7 @@ pstrlen:
     popq %rbp
     ret
 
-#-------------------------------------------------
+#--------------------SWAP-CASE-----------------------------
 
 .globl swapCase
 .type	swapCase, @function
@@ -130,5 +132,57 @@ swapCase:
     popq %rbp
     ret
 
+#--------------------------PSTRIJCPY---------------------------
 
+.globl pstrijcpy
+.type	pstrijcpy, @function
+pstrijcpy:
+     # Enter
+        pushq %rbp
+        movq %rsp, %rbp
 
+# saving pointer to dest
+xor %r10, %r10
+mov %r14, %r10
+# make r11 a counter
+xor %r11, %r11
+mov $-1, %r11
+.loop:
+    #if we are not at i, continue til i
+    cmp %r12, %r11
+    jl .next
+    
+    # If we're past j, exit
+    cmp %r15, %r11
+    jg .done3
+
+    # Read byte from src
+    movb (%rsi), %al
+
+    # copy the byte from src to dst
+    movb %al, (%rdi)
+    jne .next
+    
+
+.next:
+    # Increment the pointer and counter, and continue to next iteration
+    incq %rdi
+    incq %rsi
+    inc %r11
+    jmp .loop
+
+.done3:
+    # return pointer to dest
+    xor %rax, %rax
+    mov %r10, %rax
+
+# Exit
+    xor %rdi, %rdi
+    xor %rsi, %rsi
+    xor %rdx, %rdx
+    xor %r10, %r10
+    movq %rbp, %rsp
+    popq %rbp
+    ret
+
+    
