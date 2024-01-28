@@ -6,8 +6,11 @@
 .section .data
 
 .section .rodata
-debug_fmt:
-    .string "you are here"
+pstrlen_print_fmt:
+    .string "first pstring length: %d, second pstring length: %d"
+
+swapCase_print_fmt:
+    .string "length: %d, string: %s\n"
 
 .section .text
 .globl run_func
@@ -39,10 +42,64 @@ run_func:
     je .pstrlenCall
 
 .pstrlenCall:
-        call pstrlen
+        # first return val will be saved in r10
+        mov %r13, %rdi
+        call pstrlen        # first call
+        mov %rax, %r10
+        xor %rdi, %rdi
+        xor %rsi, %rsi
+        xor %rdx, %rdx
+
+        # second return val will be saved in r15
+        mov %r14, %rdi
+        call pstrlen        # second call
+        mov %rax, %r15
+
+        # print the final text with values
+        movq $pstrlen_print_fmt, %rdi
+        movq %r10, %rsi     # first val
+        movq %r15, %rdx     # second val
+        call printf
+# Exit
+    xorq %rax, %rax
+    movq %rbp, %rsp
+    popq %rbp
+    ret
 
 .swapCaseCall:
-        call swapCase
+        # first return pointer will be saved in r10
+                mov %r13, %rdi
+                call swapCase        # first call
+                mov %rax, %r10       # save return val in r10
+                xor %rdi, %rdi
+                xor %rsi, %rsi
+                xor %rdx, %rdx
+
+                # Print the result
+                xor %rsi, %rsi
+                movq $swapCase_print_fmt, %rdi      # text
+                mov $0x0, %rsi                      # number
+                xor %rdx, %rdx
+                movq %r10, %rdx                     # string
+                xorq %rax, %rax
+                call printf
+
+        # second return pointer will be saved in r10
+                mov %r14, %rdi
+                call swapCase        # second call
+                mov %rax, %r10       # save return val in r10
+                xor %rdi, %rdi
+                xor %rsi, %rsi
+                xor %rdx, %rdx
+
+        # Print the result
+                xor %rsi, %rsi
+                movq $swapCase_print_fmt, %rdi      # text
+                mov $0x0, %rsi                      # number
+                xor %rdx, %rdx
+                movq %r10, %rdx                     # string
+                xorq %rax, %rax
+                call printf
 
 
  # Exit
