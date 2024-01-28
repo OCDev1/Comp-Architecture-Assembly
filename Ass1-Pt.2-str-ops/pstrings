@@ -24,35 +24,13 @@ pstrlen:
         pushq %rbp
         movq %rsp, %rbp
 
-        # make a counter out of r10
-        xor %r10, %r10
-
-        # loop to count the first string, length kept in r10
-        .loop1:
-            # Read byte from string
-            movb (%r13), %al
-
-            # If were at the end of the string, exit
-            cmpb $0x0, %al
-            je .secString
-
-            # else continue counting
-            jne .next1
-
-        .next1:
-            # Increment the pointer and counter, and continue to next iteration
-            inc %r10
-            incq %r13
-            jmp .loop1
-
-        .secString:
-        xorb %al, %al
         # make a counter out of r11
           xor %r11, %r11
-        # loop to count the second string, length kept in r11
+          mov %rdi, %r13      # saving string address in r13
+        # loop to count the string, length kept in r11
                 .loop2:
                     # Read byte from string
-                    movb (%r14), %al
+                    movb (%r13), %al
 
                     # If were at the end of the string, exit
                     cmpb $0x0, %al
@@ -64,24 +42,15 @@ pstrlen:
                 .next2:
                     # Increment the pointer and counter, and continue to next iteration
                     inc %r11
-                    incq %r14
+                    incq %r13
                     jmp .loop2
 
         .done:
-            # Print the results
-            xor %rdi, %rdi
-            xor %rsi, %rsi
-            xor %rdx, %rdx
-            movq $pstrlen_print_fmt, %rdi
-            dec %r10
+            # put the result in rax and return
             dec %r11
-            movq %r10, %rsi
-            movq %r11, %rdx
-            xorq %rax, %rax
-            call printf
+            movq %r11, %rax
 
 # Exit
-    xorq %rax, %rax
      xor %rdi, %rdi
      xor %rsi, %rsi
      xor %rdx, %rdx
@@ -99,21 +68,21 @@ swapCase:
         movq %rsp, %rbp
 
  # Change every instance of small caps to big and vice-versa
- # save original adresses
- mov %r13, %r12
- mov %r14, %r15
+ # save original adress in r12
+ mov %rdi, %r12
 
- # make counter out of r10
- xor %r10, %r10
- # first string
+  # make a counter out of r11
+           xor %r11, %r11
+
+# the loop
 .loop21:
     # Read byte from string
-    movb (%r13), %al
-    add $0x1, %r10
+    movb (%rdi), %al
+    add $0x1, %r11
 
     # If at the end of the string, exit
     cmpb $0x0, %al
-    je .secondString
+    je .done2
 
     # If the byte is small, change it to caps
     cmpb $0x61, %al
@@ -125,7 +94,7 @@ swapCase:
 
 .next21:
     # Increment the pointer and counter , and continue to next iteration
-    incq %r13
+    incq %rdi
     jmp .loop21
 
 .lowerSecCheck:
@@ -140,85 +109,23 @@ swapCase:
 
 .lowerToUpper:
     subb $0x20, %al
-    movb %al, (%r13)
+    movb %al, (%rdi)
     jmp .next21
 
 .upperToLower:
     addb $0x20, %al
-    movb %al, (%r13)
+    movb %al, (%rdi)
     jmp .next21
 
-# same thing for second string
-.secondString:
-xor %r13, %r13
-.loop22:
-    # Read byte from string
-    xorb %al, %al
-    movb (%r14), %al
-
-    # If at the end of the string, exit
-    cmpb $0x0, %al
-    je .done2
-
-    # If the byte is small, change it to caps
-    cmpb $0x61, %al
-    jge .lowerSecCheck2      # possibly lower case letter
-
-    # If the byte is caps, change it to small
-    cmpb $0x41, %al
-    jge .upperSecCheck2      # possibly upper case letter
-
-.next22:
-    # Increment the pointer and counter, and continue to next iteration
-    incq %r14
-    add $0x1, %r13
-    jmp .loop22
-
-.lowerSecCheck2:
-    cmpb $0x7A, %al
-    jle .lowerToUpper2       # confirmed lower case letter
-    jmp .next22                   # not a letter at all
-
-.upperSecCheck2:
-    cmpb $0x5A, %al
-    jle .upperToLower2       # confirmed upper case letter
-    jmp .next22                   # not a letter at all
-
-.lowerToUpper2:
-    subb $0x20, %al
-    movb %al, (%r14)
-    jmp .next22
-
-.upperToLower2:
-    addb $0x20, %al
-    movb %al, (%r14)
-    jmp .next22
-
 .done2:
-    # Print the result
-    sub $0x2, %r10
-    xor %rsi, %rsi
-    movq $swapCase_print_fmt, %rdi      # text
-    mov %r10, %rsi                      # number
-    xor %rdx, %rdx
-    incq %r12
-    movq %r12, %rdx                     # string
-    xorq %rax, %rax
-    call printf
-
-    sub $0x1, %r13
-    xor %r14, %r14
-    xor %rsi, %rsi
-    movq $swapCase_print_fmt2, %rdi      # text
-    mov %r13, %rsi                      # number
-    xor %rdx, %rdx
-    incq %r15
-    movq %r15, %rdx                     # string
-    xorq %rax, %rax
-    call printf
+    #   put the new string in rax and return
+    inc %r12
+    mov %r12, %rax
 
 # Exit
-    xorq %rax, %rax
+    xor %rdi, %rdi
+    xor %rsi, %rsi
+    xor %rdx, %rdx
     movq %rbp, %rsp
     popq %rbp
     ret
