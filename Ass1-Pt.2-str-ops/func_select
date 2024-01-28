@@ -1,17 +1,29 @@
-# 318673407 Omri Cohen
 .extern printf
 .extern scanf
 .extern pstrlen
 .extern swapCase
+.extern pstrijcpy
 
 .section .data
 
 .section .rodata
 pstrlen_print_fmt:
-    .string "first pstring length: %d, second pstring length: %d"
+    .string "first pstring length: %d, second pstring length: %d\n"
 
 swapCase_print_fmt:
     .string "length: %d, string: %s\n"
+
+invalid_print_fmt:
+    .string "invalid option!\n"
+
+invalid_print_fmt1:
+    .string "invalid input!\n"
+
+scanf_fmt_3:
+    .string "%d %d"
+
+ijcheck:
+    .string "i: %d j: %d \n"
 
 .section .text
 .globl run_func
@@ -40,7 +52,21 @@ run_func:
 
     # if choice is 34 call psrijcpy
     cmp $0x22, %rdi
-    je .pstrlenCall
+    je .pstrijcpyCall
+
+    # if input is invalid
+    jmp .invalid
+
+
+.invalid:
+    mov $invalid_print_fmt, %rdi
+    call printf
+
+# Exit
+    xorq %rax, %rax
+    movq %rbp, %rsp
+    popq %rbp
+    ret
 
 .pstrlenCall:
         # first return val will be saved in r10
@@ -109,6 +135,108 @@ run_func:
                 call printf
 
  # Exit
+    xorq %rax, %rax
+    movq %rbp, %rsp
+    popq %rbp
+    ret
+
+#|/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////|
+
+.invalidIndex:
+    mov $invalid_print_fmt1, %rdi
+    call printf
+
+    mov %r13, %rdi
+    call pstrlen
+
+    mov $swapCase_print_fmt, %rdi
+    mov %rax, %rsi
+    mov %r13, %rdx
+    call printf 
+
+  mov %r14, %rdi
+    call pstrlen
+    mov $swapCase_print_fmt, %rdi
+    mov %rax, %rsi
+    mov %r14, %rdx
+    call printf 
+
+# Exit
+    xorq %rax, %rax
+    movq %rbp, %rsp
+    popq %rbp
+    ret
+
+.pstrijcpyCall:
+    # allocate space for i,j
+    sub $16, %rsp
+
+    # scanning for i,j
+    xor %rdi, %rdi
+    xor %rsi, %rsi
+    xor %rdx, %rdx
+    xor %r12, %r12
+    xor %r15, %r15
+
+    mov $scanf_fmt_3, %rdi
+    lea -8(%rbp), %rsi
+    lea -16(%rbp), %rdx
+    call scanf
+
+    mov -8(%rbp), %r12
+    mov %rsi, %r15
+
+    add $16, %rsp       # release the vars on the stack
+
+    # check j>=i 
+    cmp %r12, %r15
+    jl .invalidIndex
+
+    # input check, check lengths of both strings and compare with i,j
+    # check validity of 1st string size compared to i,j
+    mov %r13, %rdi
+    xor %rax, %rax
+    call pstrlen        # get string1 length
+    sub $1, %rax
+    cmp %r15, %rax      # check str1 len>=j
+    jl .invalidIndex
+
+    # check validity of 2nd string size compared to i,j
+    mov %r14, %rdi
+    xor %rax, %rax
+    call pstrlen        # get string1 length
+    sub $1, %rax
+    cmp %r15, %rax      # check str1 len>=j
+    jl .invalidIndex
+    
+    # if we get here i,j are ok
+    mov %r13, %rdi      #str1
+    mov %r14, %rsi      #str2
+    mov %r12, %rdx      #i
+    mov %r15, %rcx      #j
+
+    call pstrijcpy
+    mov %rax, %r14      # save dst string
+
+    # first print
+    mov %r13, %rdi
+    call pstrlen
+    mov $swapCase_print_fmt, %rdi
+    mov %rax, %rsi
+    inc %r13
+    mov %r13, %rdx
+    call printf
+
+    # second print
+    mov %r14, %rdi
+    call pstrlen
+
+    mov $swapCase_print_fmt, %rdi
+    mov %rax, %rsi
+    mov %r14, %rdx
+    call printf
+
+    # Exit
     xorq %rax, %rax
     movq %rbp, %rsp
     popq %rbp
