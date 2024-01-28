@@ -1,3 +1,4 @@
+# 318673407 Omri Cohen
 .extern printf
 .extern scanf
 
@@ -26,11 +27,10 @@ pstrlen:
 
         # make a counter out of r11
           xor %r11, %r11
-          mov %rdi, %r13      # saving string address in r13
         # loop to count the string, length kept in r11
                 .loop2:
                     # Read byte from string
-                    movb (%r13), %al
+                    movb (%rdi), %al
 
                     # If were at the end of the string, exit
                     cmpb $0x0, %al
@@ -42,7 +42,7 @@ pstrlen:
                 .next2:
                     # Increment the pointer and counter, and continue to next iteration
                     inc %r11
-                    incq %r13
+                    incq %rdi
                     jmp .loop2
 
         .done:
