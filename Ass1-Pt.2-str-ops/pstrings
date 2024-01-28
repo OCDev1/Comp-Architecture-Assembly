@@ -1,18 +1,10 @@
+# 318673407 Omri Cohen
 .extern printf
 .extern scanf
 
 .section .data
 
 .section .rodata
-# pstrlen_print_fmt:
-  #  .string "first pstring length: %d, second pstring length: %d\n"
-
-# swapCase_print_fmt:
-  #  .string "length: %d, string: %s\n"
-
-# swapCase_print_fmt2:
- #   .string "length: %d, string: %s"
-
 scanf_fmt_3:
     .string "%d %d"
 
